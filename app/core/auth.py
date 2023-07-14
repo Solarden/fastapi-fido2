@@ -26,36 +26,6 @@ class AuthBase:
     crypt_context = CryptContext(schemes=["sha256_crypt", "md5_crypt"])
 
 
-class UserCreator(AuthBase):
-    """User creator."""
-
-    def __init__(self, db: Session, user_data: Dict[str, str]):
-        self.db = db
-        self.username = user_data["username"]
-        self.password = user_data["password"]
-        self.email = user_data["email"]
-        self.first_name = user_data["first_name"]
-        self.last_name = user_data["last_name"]
-
-    def _get_password_hash(self) -> str:
-        """Get password hash."""
-        return self.crypt_context.hash(self.password)
-
-    def create_user(self) -> User:
-        """Create user."""
-        user: User = User(
-            username=self.username,
-            email=self.email,
-            hashed_password=self._get_password_hash(),
-            first_name=self.first_name,
-            last_name=self.last_name,
-        )
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-        return user
-
-
 class TokenHandler:
     """Token handler."""
 
@@ -63,7 +33,6 @@ class TokenHandler:
     def create_access_token(
         user: User,
         expires_delta: timedelta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-        state: Optional[str] = None,
     ) -> str:
         """Create access token."""
         to_encode: Dict[str, Union[str, int, Dict[str, str]]] = {
@@ -72,10 +41,6 @@ class TokenHandler:
             "iss": settings.ISSUER,
             "aud": settings.AUDIENCE,
             "iat": int(datetime.utcnow().timestamp()),
-            "jti": "2137",  # todo understand how jti is supposed to work
-            "context": {
-                "state": state,
-            },
         }
         encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
         return encoded_jwt

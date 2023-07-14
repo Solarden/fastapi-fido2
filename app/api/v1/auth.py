@@ -13,7 +13,7 @@ from app.api.schemas.auth import NewUser
 from app.api.schemas.auth import PydanticUser
 from app.api.schemas.auth import Token
 from app.api.schemas.auth import UserLoginSchema
-from app.core.auth import UserCreator
+from app.api.services.user_service import user_service
 from app.core.auth import user_auth
 from app.dependencies.auth_db import get_db
 from app.dependencies.auth_token import get_current_user
@@ -25,9 +25,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/signup", response_model=MessageResponse, status_code=status.HTTP_201_CREATED, summary="Sign up")
 async def sign_up(new_user: NewUser, db: Session = Depends(get_db)) -> Dict[str, str]:
     """Sign up a new user."""
-    user_creator = UserCreator(db=db, user_data=new_user.dict())
     try:
-        user_creator.create_user()
+        user_service.create_user(db, new_user.dict())
     except IntegrityError as e:
         raise UserAlreadyExistsException from e
     return {"message": "Created user successfully!"}
@@ -44,9 +43,7 @@ async def sign_up(new_user: NewUser, db: Session = Depends(get_db)) -> Dict[str,
 )
 async def login(form_data: UserLoginSchema, db: Session = Depends(get_db)):
     """Login user."""
-    username = form_data.username
-    password = form_data.password
-    user: User = user_auth.authenticate_user(db, username, password)
+    user: User = user_auth.authenticate_user(db, form_data.username, form_data.password)
     if user:
         access_token = user_auth.create_access_token(user=user)
         return {"access_token": access_token, "token_type": "bearer"}
@@ -54,8 +51,8 @@ async def login(form_data: UserLoginSchema, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=PydanticUser, status_code=status.HTTP_200_OK, summary="User information.")
-async def sup(
+async def get_current_user_information(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Sup."""
+    """Get current user information."""
     return current_user

@@ -51,36 +51,3 @@ class MessageResponse(BaseModel):
     """Schema for message"""
 
     message: str
-
-
-class Fido2RegistrationResponse(BaseModel):
-    """Schema for FIDO2 registration response"""
-
-    client_data: str
-    attestation_object: str
-    state: str
-
-
-class Fido2AuthenticatorResponse(BaseModel):
-    """Schema for FIDO2 authenticator response"""
-
-    credential_id: str
-    client_data: str
-    authenticator_data: str
-    signature: str
-    user_handle: str
-
-
-class Fido2State(BaseModel):
-    """Schema for FIDO2 state"""
-
-    challenge: str
-    user_verification: str
-    authenticator_attachment: str
-
-
-class Fido2RegistrationStartedResponse(BaseModel):
-    """Schema for FIDO2 registration started response"""
-
-    public_key: str
-    state: Fido2State
