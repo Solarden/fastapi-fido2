@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Webauthn demo</h1>
+<h2>Login/Register</h2>
+<div style="display: flex; justify-content: space-around">
+    <div style="border: 1px solid black; padding: 10px">
+        <h2>Register</h2>
+        <label for="registerUsername">Username:</label>
+        <input type="text" id="registerUsername"/>
+        <label for="registerPassword">Password:</label>
+        <input type="password" id="registerPassword"/>
+        <button onclick="authRegister()">Register</button>
+    </div>
+    <div style="border: 1px solid black; padding: 10px">
+        <h2>Authenticate</h2>
+        <label for="authUsername">Username:</label>
+        <input type="text" id="authUsername"/>
+        <label for="authPassword">Password:</label>
+        <input type="password" id="authPassword"/>
+        <button onclick="authLogin()">Authenticate</button>
+    </div>
+</div>
+<div id="authn" style="display: none">
+    <h2>FIDO</h2>
+    <div style="display: flex; justify-content: space-around">
+        <div style="border: 1px solid black; padding: 10px">
+            <h2>Register</h2>
+            <button onclick="fidoRegister()">Register</button>
+        </div>
+        <div style="border: 1px solid black; padding: 10px">
+            <h2>Authenticate</h2>
+            <button onclick="fidoAuthenticate()">Authenticate</button>
+        </div>
+    </div>
+</div>
+<pre id="log"></pre>
+<script src='/api/v1/authn/webauthn_client.js'></script>
+</body>
+</html>

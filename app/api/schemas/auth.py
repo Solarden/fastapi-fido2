@@ -15,6 +15,13 @@ class NewUser(BaseModel):
     last_name: Optional[str]
 
 
+class UserLoginSchema(BaseModel):
+    """Schema for user login"""
+
+    username: str
+    password: str
+
+
 class PydanticUser(BaseModel):
     """Schema for user"""
 

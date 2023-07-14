@@ -3,14 +3,16 @@ from typing import Dict
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette import status
 
+from app.api.errors import UserAlreadyExistsException
 from app.api.schemas.auth import MessageResponse
 from app.api.schemas.auth import NewUser
 from app.api.schemas.auth import PydanticUser
 from app.api.schemas.auth import Token
+from app.api.schemas.auth import UserLoginSchema
 from app.core.auth import UserCreator
 from app.core.auth import user_auth
 from app.dependencies.auth_db import get_db
@@ -24,7 +26,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def sign_up(new_user: NewUser, db: Session = Depends(get_db)) -> Dict[str, str]:
     """Sign up a new user."""
     user_creator = UserCreator(db=db, user_data=new_user.dict())
-    user_creator.create_user()
+    try:
+        user_creator.create_user()
+    except IntegrityError as e:
+        raise UserAlreadyExistsException from e
     return {"message": "Created user successfully!"}
 
 
@@ -37,7 +42,7 @@ async def sign_up(new_user: NewUser, db: Session = Depends(get_db)) -> Dict[str,
         status.HTTP_400_BAD_REQUEST: {"description": "Incorrect username or password"},
     },
 )
-async def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: UserLoginSchema, db: Session = Depends(get_db)):
     """Login user."""
     username = form_data.username
     password = form_data.password

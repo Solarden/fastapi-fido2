@@ -28,3 +28,17 @@ class InvalidCredentialException(BasicException):
 
     status_code: status = status.HTTP_404_NOT_FOUND
     detail: str = "Invalid or not found credential"
+
+
+class UserAlreadyExistsException(BasicException):
+    """User Already Exists Exception"""
+
+    status_code: status = status.HTTP_409_CONFLICT
+    detail: str = "User already exists"
+
+
+class UserCredentialsNotFound(BasicException):
+    """User Credentials Not Found Exception"""
+
+    status_code: status = status.HTTP_404_NOT_FOUND
+    detail: str = "User credentials not configured or not found"

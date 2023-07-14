@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+from typing import List
 
 import webauthn
 from fastapi import APIRouter
@@ -10,7 +11,9 @@ from sqlalchemy.orm import Session
 from starlette import status
 from webauthn.helpers.structs import AuthenticatorAttachment
 from webauthn.helpers.structs import AuthenticatorSelectionCriteria
+from webauthn.helpers.structs import AuthenticatorTransport
 from webauthn.helpers.structs import PublicKeyCredentialCreationOptions
+from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 from webauthn.helpers.structs import PublicKeyCredentialRequestOptions
 from webauthn.helpers.structs import ResidentKeyRequirement
 from webauthn.helpers.structs import UserVerificationRequirement
@@ -24,6 +27,7 @@ from app.core import settings
 from app.dependencies.auth_db import get_db
 from app.dependencies.auth_token import get_current_user
 from app.dependencies.authn import get_current_user_credential
+from app.dependencies.authn import get_current_user_credentials
 from app.models import User
 from app.models import UserCredential
 
@@ -33,32 +37,15 @@ router = APIRouter(prefix="/authn", tags=["authn"])
 @router.get("/", response_class=HTMLResponse)
 async def index():
     """Index."""
-    # language=HTML
-    return """
-<h1>Webauthn demo</h1>
-<div style="display: flex; justify-content: space-around">
-  <div style="border: 1px solid black; padding: 10px">
-    <h2>Register</h2>
-    <label for="user-id-register">User ID:</label>
-    <input type="number" step="1" id="user-id-register"/>
-    <button onclick="register()">Register</button>
-  </div>
-  <div style="border: 1px solid black; padding: 10px">
-    <h2>Authenticate</h2>
-    <label for="user-id-auth">User ID:</label>
-    <input type="number" step="1" id="user-id-auth"/>
-    <button onclick="authenticate()">Authenticate</button>
-  </div>
-</div>
-<pre id="log"></pre>
-<script src='/api/v1/auth/webauthn_client.js'"></script>
-"""
+    with open("app/api/v1/resources/authn_html.html", "r", encoding="utf8") as f:
+        html_string = f.read()
+        return html_string
 
 
 @router.get("/webauthn_client.js", response_class=JavascriptResponse)
 async def client_js():
     """Client JS."""
-    return Path("app/api/v1/webauthn_client.js").read_bytes()
+    return Path("app/api/v1/resources/webauthn_client.js").read_bytes()
 
 
 @router.get("/register/public_key", response_model=PublicKeyCredentialCreationOptions, status_code=status.HTTP_200_OK)
@@ -106,17 +93,24 @@ async def create_user_credential(
 async def get_user_auth_credential(
     request: Request,
     user: User = Depends(get_current_user),  # pylint: disable=unused-argument
+    user_credentials: List[UserCredential] = Depends(get_current_user_credentials),
 ):
     """Get user auth credential."""
     public_key = webauthn.generate_authentication_options(
         rp_id=settings.RP_ID,
+        allow_credentials=[
+            PublicKeyCredentialDescriptor(
+                id=credential.credential_id, transports=[AuthenticatorTransport.USB, AuthenticatorTransport.HYBRID]
+            )
+            for credential in user_credentials
+        ],
         user_verification=UserVerificationRequirement.DISCOURAGED,
     )
     request.session["webauthn_auth_challenge"] = base64.b64encode(public_key.challenge).decode()
     return public_key
 
 
-@router.post("/auth/", response_model=MessageResponse, status_code=status.HTTP_200_OK)
+@router.post("/auth", response_model=MessageResponse, status_code=status.HTTP_200_OK)
 async def auth_post(
     request: Request,
     credential: CustomAuthenticationCredential,
@@ -126,7 +120,7 @@ async def auth_post(
 ):
     """Auth post."""
     expected_challenge = base64.b64decode(request.session["webauthn_auth_challenge"].encode())
-    webauthn.verify_authentication_response(
+    auth = webauthn.verify_authentication_response(
         credential=credential,
         expected_challenge=expected_challenge,
         expected_rp_id=settings.RP_ID,
@@ -134,5 +128,5 @@ async def auth_post(
         credential_public_key=user_credential.public_key,
         credential_current_sign_count=user_credential.sign_count,
     )
-    user_credential.increment_sign_count(db)
+    user_credential.update_sign_count(db, auth.new_sign_count)
     return {"message": "OK"}

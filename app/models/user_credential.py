@@ -42,8 +42,8 @@ class UserCredential(Base):
         db.commit()
         return user_credential
 
-    def increment_sign_count(self, db: Session) -> None:
+    def update_sign_count(self, db: Session, sign_count: int) -> None:
         """Increment sign count."""
-        self.sign_count += 1
+        self.sign_count = sign_count
         db.add(self)
         db.commit()
