@@ -27,10 +27,14 @@ async function getPublicKey(path) {
     return await r.json()
 }
 
-async function createPublicKey(publicKey) {
+async function createPublicKey(publicKey, type = 'create') {
     let creds
     try {
-        creds = await navigator.credentials.create({publicKey})
+        if (type === 'create') {
+            creds = await navigator.credentials.create({publicKey})
+        } else {
+            creds = await navigator.credentials.get({publicKey})
+        }
     } catch (err) {
         log('refused:', err.toString())
         return
@@ -79,7 +83,7 @@ async function fidoAuthenticate() {
     for (let i = 0; i < publicKey.allowCredentials.length; i++) {
         publicKey.allowCredentials[i].id = asArrayBuffer(publicKey.allowCredentials[i].id)
     }
-    let creds = await createPublicKey(publicKey)
+    let creds = await createPublicKey(publicKey, 'get')
     await fidoPost('authn/auth', creds, 200)
     log('authentication successful')
 }
