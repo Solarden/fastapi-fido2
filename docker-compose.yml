@@ -1,0 +1,53 @@
+version: "3.11"
+
+volumes:
+  db_volume:
+
+x-env_file: &env_file
+  env_file:
+    - ./.env
+
+x-base:
+  &base
+  <<: *env_file
+  build: .
+  volumes:
+    - .:/app
+
+services:
+  backend:
+    <<: *base
+    container_name: fastapi-fido2
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: >
+      bash -c "uvicorn --host=0.0.0.0 app.main:app --reload --workers 1"
+    volumes:
+      - .:/app
+      - /app/venv/
+
+  db:
+    <<: *env_file
+    container_name: fastapi-fido2-db
+    image: postgres:11
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastapi-fido2
+    volumes:
+      - db_volume:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+
+  db_test:
+    <<: *env_file
+    container_name: fastapi-fido2-db-test
+    image: postgres:11
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastapi-fido2-test
+    ports:
+      - "5434:5432"

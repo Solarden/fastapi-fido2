@@ -1,0 +1,14 @@
+[MASTER]
+ignore=migrations
+ignore-patterns=test_.*?p,stubs.*?p
+
+[MESSAGES CONTROL]
+enable=useless-suppression
+disable=C0114,R0903,W0511,R0902,W0212,E0013,W0223,C0103,W0401
+
+[FORMAT]
+max-line-length=120
+disable=logging-fstring-interpolation
+
+[TYPECHECK]
+disable=unsubscriptable-object
