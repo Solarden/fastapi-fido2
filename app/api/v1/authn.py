@@ -9,7 +9,7 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from starlette import status
-from webauthn.helpers.structs import AuthenticatorAttachment
+from webauthn.helpers.structs import AttestationConveyancePreference
 from webauthn.helpers.structs import AuthenticatorSelectionCriteria
 from webauthn.helpers.structs import AuthenticatorTransport
 from webauthn.helpers.structs import PublicKeyCredentialCreationOptions
@@ -60,8 +60,9 @@ async def get_user_register_public_key(
         user_id=str(user.id),
         user_name=user.email,
         user_display_name=user.username,
+        attestation=AttestationConveyancePreference.INDIRECT,
         authenticator_selection=AuthenticatorSelectionCriteria(
-            authenticator_attachment=AuthenticatorAttachment.CROSS_PLATFORM,
+            authenticator_attachment=None,
             resident_key=ResidentKeyRequirement.DISCOURAGED,
             user_verification=UserVerificationRequirement.DISCOURAGED,
         ),

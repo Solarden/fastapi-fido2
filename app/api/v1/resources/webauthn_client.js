@@ -71,6 +71,8 @@ async function fidoRegister() {
     console.log('register get response:', publicKey)
     publicKey.user.id = asArrayBuffer(publicKey.user.id)
     publicKey.challenge = asArrayBuffer(publicKey.challenge)
+    console.log(publicKey.user.id)
+    console.log(publicKey.challenge)
     let creds = await createPublicKey(publicKey)
     await fidoPost('authn/register', creds)
     log('registration successful')
