@@ -31,3 +31,7 @@ db-upgrade:
 .PHONY: db-downgrade
 db-downgrade:
 	@docker exec -it fastapi-fido2 alembic -c alembic.ini  downgrade -1
+
+.PHONY: update-deps
+update-deps:
+	pip-compile --generate-hashes --allow-unsafe requirements/requirements.in --output-file requirements/requirements.txt

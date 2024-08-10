@@ -47,10 +47,12 @@ async function fidoPost(path, creds, expectedStatus = 201) {
     const data = {
         id: creds.id,
         rawId: asBase64(creds.rawId),
+        authenticatorAttachment: creds.authenticatorAttachment,
         response: {
             attestationObject: asBase64(attestationObject),
             clientDataJSON: asBase64(clientDataJSON),
-        }
+        },
+        type: creds.type
     }
     if (signature) {
         data.response.signature = asBase64(signature)

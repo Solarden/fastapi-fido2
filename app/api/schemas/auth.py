@@ -2,6 +2,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
+from pydantic import ConfigDict
 from pydantic import EmailStr  # pylint: disable=no-name-in-module
 
 
@@ -11,8 +12,8 @@ class NewUser(BaseModel):
     username: str
     email: EmailStr
     password: str
-    first_name: Optional[str]
-    last_name: Optional[str]
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 
 class UserLoginSchema(BaseModel):
@@ -25,11 +26,7 @@ class UserLoginSchema(BaseModel):
 class PydanticUser(BaseModel):
     """Schema for user"""
 
-    class Config:
-        """Config for user schema"""
-
-        title = "User"
-        orm_mode = True
+    model_config = ConfigDict(title="User", from_attributes=True)
 
     id: UUID
     username: str
